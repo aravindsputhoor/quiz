@@ -153,7 +153,7 @@ $(document).on('click', '#review-submit', function(){
       data: JSON.stringify(array),
       success: function(response) {
           if(response.status == 1) {
-            
+            getResult();
           } else {
             toastr.warning(response.message);
           }
@@ -164,3 +164,57 @@ $(document).on('click', '#review-submit', function(){
   });
 
 });
+
+function getResult() {
+  let jsonData = {
+    id: userId
+  };
+
+  $.ajax({
+      url: 'getResult.php',
+      type: 'POST',
+      dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(jsonData),
+      success: function(response) {
+          if(response.status == 1) {
+            setResultHtml(response);
+          } else {
+            toastr.warning(response.message);
+          }
+      },
+      error: function(xhr, status, error) {
+          console.error(xhr.responseText);
+      }
+  });
+}
+
+function setResultHtml(response){
+  let html = '<div class="quiz-header">';
+  $.each(response.data, function(index, question) {
+    html += `<h5>`+question.question+`</h5><ul>`;
+
+    $.each(question.ansOptions, function(index, ansOption) {
+      var ans = '<label>'+ansOption.ansOption+'</label>';
+      if(ansOption.ans && ansOption.userAns) {
+        ans = '<label><b>'+ansOption.ansOption+'</b>&#9989;</label>';
+      } else if(ansOption.ans == false && ansOption.userAns ==  true) {
+        ans = '<label><b>'+ansOption.ansOption+'</b></label>';
+      } else if(ansOption.ans == true && ansOption.userAns ==  false) {
+        ans = '<label>'+ansOption.ansOption+'&#9989;</label>';
+      }
+
+      html += `<li>`+ans+`</li>`;
+    });
+    html += `</ul><hr>`;
+  });
+
+  html += `<div class="text-center">
+  <h3>Total Questions: `+response.totalQuestions+`</h3>
+  <h3>Passed: `+response.passed+`</h3>
+  <h3>Failed: `+response.faild+`</h3>
+  <h1><b>Thank You !</b></h1>
+  </div>`;
+
+  $('#quiz').html(html);
+}
